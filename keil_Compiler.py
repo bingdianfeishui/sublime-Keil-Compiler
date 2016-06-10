@@ -5,7 +5,7 @@ import xml.etree.cElementTree as ET
 
 class KeilCompileCommand(sublime_plugin.TextCommand):
 	def run(self,edit):
-
+		self.view.run_command("save")
 		k=self.view.window().extract_variables()
 		os.chdir(k["project_path"])							
 		path=os.listdir(os.getcwd())
