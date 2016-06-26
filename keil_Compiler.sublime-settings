@@ -1,3 +1,4 @@
 {
-	"modify_uvproj": true
+	"modify_uvproj": true,
+	"fileFilter": [".c", ".C"]
 }
