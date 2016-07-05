@@ -51,12 +51,18 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 
 		#删除原来的File节点
 		oldFiles = dom.getElementsByTagName("FileName")
-		for f in oldFiles:
-			print("删除旧文件信息: %s"%f.childNodes[0].nodeValue)
-			f.parentNode.parentNode.removeChild(f.parentNode); 
-
+		if oldFiles:
+			for f in oldFiles:
+				print("删除旧文件信息: %s"%f.childNodes[0].nodeValue)
+				f.parentNode.parentNode.removeChild(f.parentNode); 
 
 		root = dom.getElementsByTagName("Files")
+		if not root:
+			group = dom.getElementsByTagName("Group")
+			files = dom.createElement("Files")
+			for gp in group:
+				gp.appendChild(files)
+			root = dom.getElementsByTagName("Files")
 
 		for f in fileList:
 			print('添加文件节点信息: %s'%f)
@@ -106,6 +112,7 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 			fileHandle.close()
 			os.remove(uvproj)
 			os.rename(uvBak, uvproj)
+			print('修改.uvproj文件失败，文件已恢复到更改前的状态。')
 		finally:
 			fileHandle.close()
 			os.remove(uvBak)
