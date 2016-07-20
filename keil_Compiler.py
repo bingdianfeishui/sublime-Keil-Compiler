@@ -1,19 +1,21 @@
-import os, shutil
+import os, shutil, re
 import sublime, sublime_plugin
 import subprocess, sys
 import xml.dom.minidom as minidom
 
 class KeilCompileCommand(sublime_plugin.TextCommand):
+	
 	def run(self,edit):
 		self.view.run_command("save")
 		k=self.view.window().extract_variables()
-		curPath = k["project_path"]
-		os.chdir(curPath)							
+		global projPath
+		projPath = k["project_path"]
+		os.chdir(projPath)							
 		path=os.listdir(os.getcwd())
 						
 		for i in path:
 			if(i.find(".uvproj")>0):
-				keilProj=os.path.join(curPath,i)
+				keilProj=os.path.join(projPath,i)
 
 		settings = sublime.load_settings('keil_Compiler.sublime-settings')
 		value = settings.get('modify_uvproj')
@@ -28,7 +30,7 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 		Command="UV4 -b {0} -o log.txt".format(keilProj)
 		
 		subprocess.call(Command,stdout=subprocess.PIPE,shell =False )
-		self.view.window().open_file(k["project_path"]+"/log.txt")
+		self.view.window().open_file(projPath+"/log.txt")
 		
 		print ("完成。")
 
@@ -51,25 +53,19 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 
 		#删除原来的File节点
 		oldFiles = dom.getElementsByTagName("FileName")
-		if oldFiles:
-			for f in oldFiles:
-				print("删除旧文件信息: %s"%f.childNodes[0].nodeValue)
-				f.parentNode.parentNode.removeChild(f.parentNode); 
+		for f in oldFiles:
+			print("删除旧文件信息: %s"%f.childNodes[0].nodeValue)
+			f.parentNode.parentNode.removeChild(f.parentNode); 
+
 
 		root = dom.getElementsByTagName("Files")
-		if not root:
-			group = dom.getElementsByTagName("Group")
-			files = dom.createElement("Files")
-			for gp in group:
-				gp.appendChild(files)
-			root = dom.getElementsByTagName("Files")
 
 		for f in fileList:
 			print('添加文件节点信息: %s'%f)
 			newfile = dom.createElement("File")
 
 			fileNameNode = dom.createElement("FileName")
-			fileName = dom.createTextNode(f)
+			fileName = dom.createTextNode(f.lstrip("./"))
 			fileNameNode.appendChild(fileName)
 
 			fileTypeNode = dom.createElement("FileType")
@@ -77,7 +73,7 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 			fileTypeNode.appendChild(fileType)
 
 			filePathNode = dom.createElement("FilePath")
-			filePath = dom.createTextNode("./"+f)
+			filePath = dom.createTextNode(f)	# filePath = dom.createTextNode("./"+f)
 			filePathNode.appendChild(filePath)
 			
 			newfile.appendChild(fileNameNode)
@@ -112,7 +108,6 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 			fileHandle.close()
 			os.remove(uvproj)
 			os.rename(uvBak, uvproj)
-			print('修改.uvproj文件失败，文件已恢复到更改前的状态。')
 		finally:
 			fileHandle.close()
 			os.remove(uvBak)
@@ -127,8 +122,17 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 			if v and v.file_name():
 				fileName=v.file_name()
 				# print("Opened File: %s  %s"%(fileName,os.path.splitext(fileName)[1]))
-				if value and (os.path.splitext(fileName)[1] in value):	
-					files.append(os.path.basename(fileName))
+				if value and (os.path.splitext(fileName)[1] in value):	#if the extension in 'fileFilter' setting
+					#files.append(os.path.basename(fileName))	#only add the basename
+					pattern = r"[a-zA-Z]:"
+					f=fileName.replace(projPath,'.').replace("\\","/").strip()
+					
+					if re.search(pattern,f):
+						print(f)
+						f=f[2:]
+						print(f)
+					files.append(f)	#can add file in subfolders
+					# files.append(fileName)
 		return files
 
 	def beautifulFormat(self, xmlDomObject):
