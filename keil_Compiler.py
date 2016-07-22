@@ -4,7 +4,6 @@ import subprocess, sys
 import xml.dom.minidom as minidom
 
 class KeilCompileCommand(sublime_plugin.TextCommand):
-	
 	def run(self,edit):
 		self.view.run_command("save")
 		k=self.view.window().extract_variables()
@@ -65,11 +64,17 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 			newfile = dom.createElement("File")
 
 			fileNameNode = dom.createElement("FileName")
-			fileName = dom.createTextNode(f.lstrip("./"))
+			fileName = dom.createTextNode(os.path.basename(f)) #(f.lstrip("./"))
 			fileNameNode.appendChild(fileName)
 
 			fileTypeNode = dom.createElement("FileType")
-			fileType = dom.createTextNode("1")
+			t=f[f.rfind('.'):].upper()
+			if t==".C":
+				ftype = "1"
+			elif t==".A51":
+				ftype="2"
+				
+			fileType = dom.createTextNode( ftype)
 			fileTypeNode.appendChild(fileType)
 
 			filePathNode = dom.createElement("FilePath")
@@ -122,10 +127,10 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 			if v and v.file_name():
 				fileName=v.file_name()
 				# print("Opened File: %s  %s"%(fileName,os.path.splitext(fileName)[1]))
-				if value and (os.path.splitext(fileName)[1] in value):	#if the extension in 'fileFilter' setting
+				if value and (fileName[fileName.rfind('.'):].upper() in value):#(os.path.splitext(fileName)[1] in value):	#if the extension in 'fileFilter' setting
 					#files.append(os.path.basename(fileName))	#only add the basename
 					pattern = r"[a-zA-Z]:"
-					f=fileName.replace(projPath,'.').replace("\\","/").strip()
+					f=fileName.replace(projPath,'.').strip() #.replace("\\","/").strip()
 					
 					if re.search(pattern,f):
 						print(f)
