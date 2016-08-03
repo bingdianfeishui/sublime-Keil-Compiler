@@ -4,8 +4,8 @@ import subprocess, sys
 import xml.dom.minidom as minidom
 
 class KeilCompileCommand(sublime_plugin.TextCommand):
-	def run(self,edit):
-		self.view.run_command("save")
+	def run(self,edit,modify):
+		
 		k=self.view.window().extract_variables()
 		global projPath
 		projPath = k["project_path"]
@@ -16,15 +16,18 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 			if(i.find(".uvproj")>0):
 				keilProj=os.path.join(projPath,i)
 
-		settings = sublime.load_settings('keil_Compiler.sublime-settings')
-		value = settings.get('modify_uvproj')
+		# settings = sublime.load_settings('keil_Compiler.sublime-settings')
+		# value = settings.get('modify_uvproj')
+		value = bool(modify)
 
 		if value:
+			print("修改uvproj.")
 			fileList = self.getOpenFiles()
 			if not self.modify_uvproj(keilProj, fileList):
 				print ("任务终止。")
 				return
-
+		else:
+			print("不修改uvproj.")
 
 		Command="UV4 -b {0} -o log.txt".format(keilProj)
 		
@@ -58,7 +61,12 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 
 
 		root = dom.getElementsByTagName("Files")
-
+		if not root:
+			root = dom.getElementsByTagName("Group")
+			newfiles = dom.createElement("Files")
+			for gp in root:
+				gp.appendChild(newfiles)
+		root = dom.getElementsByTagName("Files")
 		for f in fileList:
 			print('添加文件节点信息: %s'%f)
 			newfile = dom.createElement("File")
@@ -92,7 +100,7 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 		uvBak = uvproj + ".uvbak"
 		shutil.copy(uvproj, uvBak)
 
-		fileHandle = open(uvproj,'w') 
+		fileHandle = open(uvproj,'w',encoding='utf-8') 
 
 		try:
 
@@ -127,16 +135,19 @@ class KeilCompileCommand(sublime_plugin.TextCommand):
 			if v and v.file_name():
 				fileName=v.file_name()
 				# print("Opened File: %s  %s"%(fileName,os.path.splitext(fileName)[1]))
-				if value and (fileName[fileName.rfind('.'):].upper() in value):#(os.path.splitext(fileName)[1] in value):	#if the extension in 'fileFilter' setting
+				if value and (fileName[fileName.rfind('.'):].upper() in value):#if the extension in 'fileFilter' setting
 					#files.append(os.path.basename(fileName))	#only add the basename
-					pattern = r"[a-zA-Z]:"
-					f=fileName.replace(projPath,'.').strip() #.replace("\\","/").strip()
+					self.view.run_command("save")	#保存符合的文件
 					
-					if re.search(pattern,f):
-						print(f)
-						f=f[2:]
-						print(f)
-					files.append(f)	#can add file in subfolders
+					f=fileName.replace(projPath,'.').strip() #构造子目录的相对路径
+					f=fileName.replace(os.path.dirname(projPath),'..').strip() #构造父目录下文件夹的相对路径
+					
+					# pattern = r"[a-zA-Z]:"
+					# if re.search(pattern,f):
+					# 	print(f)
+					# 	f=f[2:]
+					# 	print(f)
+					files.append(f)	#can deal with file in other folders
 					# files.append(fileName)
 		return files
 
