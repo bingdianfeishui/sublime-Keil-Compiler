@@ -4,8 +4,12 @@
 **在Sublime Text 3 及 Keil uVision 4下测试通过，其余版本未测试。**
 Tested with Sublime Text 3 & Keil uVision 4. Didn't test the other version.
 
-支持一个项目中添加多个c文件了，但需要你将所有要添加的c文件在sublime中打开。
-You can add multi .c files in one Keil project. All .c files opened in sublime will be added when press `Alt+C`.
+支持一个项目中添加多个c文件了。
+按`Ctrl+Alt+C`，将所有打开的.c文件添加到项目，然后调用Keil编译。
+按`Alt+C`，仅编译，不添加文件。
+You can add multi .c files in one Keil project.
+All .c files opened in sublime will be added and compiled when pressd `Ctrl+Alt+C`.
+Press `Alt+C` for compiling only.
 
 
 Keil的自带编辑器很难用，所以我利用Sublime Text作为Keil uVision的外部编辑器来学习MCS51单片机，但每次编辑完成后都需要关闭sublime回到Keil中进行编译，不是很方便，要是sublime能直接编译C51文件就好了。网上有一些用sublime调用C51的编译器、连接器等进行编译的方法，但设置麻烦，而且相对的不太容易传递编译参数。幸运的是我在github上发现了[stu0219/sublime-Keil-Compiler](https://github.com/stu0219/sublime-Keil-Compiler)，直接在sublime中以命令行的方式调用Keil uVision进行编译。但由于我学习C51单片机时，经常需要在Keil的Project中切换.c文件，每次都要到Keil中设置，所以我fork了这个项目，添加了编译前更改Keil Project文件的功能。这样，我只需要在Sublime中新建一个c文件，保存到项目文件夹，然后直接编译就行了，全部在Sublime中进行，方便太多了~~

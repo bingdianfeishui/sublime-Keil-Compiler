@@ -5,7 +5,8 @@
     [
     {
     	"caption" : "Keil Compiler",
-    	"command" : "keil_compile"
+    	"command" : "keil_compile",
+    	"args"	  : { "modify" : false }
 	}
 	]
 }

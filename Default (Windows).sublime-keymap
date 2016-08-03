@@ -1,3 +1,4 @@
 [
-	{"keys": ["alt+c"], "command": "keil_compile"}
+	{"keys": ["alt+c"], "command": "keil_compile", "args"	  : { "modify" : false } },
+	{"keys": ["ctrl+alt+c"], "command": "keil_compile", "args"	  : { "modify" : true } }
 ]
